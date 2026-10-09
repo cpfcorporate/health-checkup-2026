@@ -161,6 +161,7 @@ table.t select,table.t input[type=date]{min-height:32px;padding:4px 6px;font-siz
   "examPeriodStart": "2026-11-01",
   "examPeriodEnd": "2027-01-31",
   "adminPin": "1234",
+  "requirePasscode": false,
   "selfBookingField": "location",
   "selfBookingValue": "リモート（自分で予約）",
   "selfBookingDeadline": "2026-11-30",
@@ -243,7 +244,7 @@ table.t select,table.t input[type=date]{min-height:32px;padding:4px 6px;font-siz
 /* =====================================================================
    接続設定：Apps Script のウェブアプリURL（空欄なら、このブラウザ内に保存するお試しモード）
    ===================================================================== */
-const BACKEND_URL = '';
+const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbwsyoHVNc6uRzPi-v2bhnYEYWsmswr77R66hydZ30rxBEZeoY7sa_6ehAjEiu6l61t4iQ/exec';
 
 /* ---------- 小道具 ---------- */
 const $ = (s, el = document) => el.querySelector(s);
@@ -459,7 +460,7 @@ function step1(){
   return `<div class="card">
     <h2>あなたについて</h2>
     <p class="lead">生年月日から、受診日時点の年齢を自動で計算します。</p>
-    ${Store.remote ? `<label class="f">合言葉<span class="req">必須</span></label><input type="password" data-s="passcode" value="${esc(S.passcode)}" autocomplete="off">` : ''}
+    ${Store.remote && String(CFG.requirePasscode) === 'true' ? `<label class="f">合言葉<span class="req">必須</span></label><input type="password" data-s="passcode" value="${esc(S.passcode)}" autocomplete="off">` : ''}
     <label class="f">氏名<span class="req">必須</span></label>
     <input type="text" data-s="name" value="${esc(S.name)}" autocomplete="name" placeholder="例）地域 花子">
     <label class="f">会社のメールアドレス<span class="req">必須</span></label>
@@ -597,7 +598,7 @@ function doneView(ev){
 function validate(step){
   const e = [];
   if (step === 1) {
-    if (Store.remote && !S.passcode.trim()) e.push('合言葉を入力してください');
+    if (Store.remote && String(CFG.requirePasscode) === 'true' && !S.passcode.trim()) e.push('合言葉を入力してください');
     if (!S.name.trim()) e.push('氏名を入力してください');
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(S.email.trim())) e.push('メールアドレスを正しく入力してください');
     if (!birthStr()) e.push('生年月日を選んでください');
@@ -863,7 +864,7 @@ function settingsTab(){
   const basic = [['fiscalYearLabel','年度名','text'],['orgName','団体名','text'],['deadline','回答期限','date'],
     ['ageBasis','年齢の基準','select',[['examDate','受診日時点の満年齢（確定前は受診期間の開始日）'],['fiscalYearEnd','年度末時点の満年齢']]],
     ['fiscalYearEnd','年度末の日付','date'],['examPeriodStart','受診期間（開始）','date'],['examPeriodEnd','受診期間（終了）','date'],
-    ['adminPin','管理者PIN（お試しモード用）','text'],['dockCourseId','人間ドックのコースID','text'],
+    ['adminPin','管理者PIN（お試しモード用）','text'],['requirePasscode','職員に合言葉を入力させる','select',[['false','使わない'],['true','使う（Code.gsのSTAFF_PASSCODEと同じもの）']]],['dockCourseId','人間ドックのコースID','text'],
     ['selfBookingField','各自予約を判定する項目ID','text'],['selfBookingValue','各自予約になる選択肢','text']];
   $('#adm').innerHTML = `
     <div class="sec"><h3>基本設定</h3><div class="ed-grid" style="margin-top:8px">
